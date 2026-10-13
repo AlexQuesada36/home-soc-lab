@@ -42,3 +42,6 @@ Found a handful of real issues: missing security headers (CSP, HSTS), HTTP TRACE
 ## Evidence
 
 Raw CSV export from the Wazuh dashboard is in evidence/.
+## Dashboard Screenshot
+
+![Wazuh Dashboard](WazuhSS.png)
