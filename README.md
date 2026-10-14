@@ -13,8 +13,9 @@ Small home lab where I simulated a few common attacks and watched how Wazuh (ope
 ### Nmap scan
 Ran a SYN stealth scan from Kali against the target:
 
-    nmap -sS <target-ip>
-
+```bash
+nmap -sS &lt;target-ip&gt;
+```
 This one didn't actually trigger a host-based alert - SYN scans don't touch application services or generate logs on their end, so catching this needs network-level monitoring instead (firewall drop logs, or something like Suricata).
 
 ### SSH brute force
