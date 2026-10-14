@@ -14,21 +14,23 @@ Small home lab where I simulated a few common attacks and watched how Wazuh (ope
 Ran a SYN stealth scan from Kali against the target:
 
 ```bash
-nmap -sS &lt;target-ip&gt;
+nmap -sS <target-ip>
 ```
 This one didn't actually trigger a host-based alert - SYN scans don't touch application services or generate logs on their end, so catching this needs network-level monitoring instead (firewall drop logs, or something like Suricata).
 
 ### SSH brute force
 Threw rockyou.txt at SSH with Hydra:
+```bash
 
     hydra -l victim -P /usr/share/wordlists/rockyou.txt -t 1 -W 5 ssh://<target-ip>
-
+```
 Wazuh caught this one well. Rule 5710/5760 fired on each failed login, and once it saw enough failures from the same source in a short window, Rule 5763 escalated it to a brute-force alert (level 10). SSH's own connection throttling also kicked in and slowed the attack down on its own.
 
 ### Nikto web scan
+```bash
 
     nikto -h http://<target-ip>
-
+```
 Found a handful of real issues: missing security headers (CSP, HSTS), HTTP TRACE still enabled, and directory listing exposed on /icons/. Wazuh picked up the scan itself as a wave of 400 errors from one IP (rule 31101), then escalated to a scanning alert (rule 31151) once the volume crossed its threshold.
 
 ## What I'd fix
