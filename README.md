@@ -4,8 +4,8 @@ Small home lab where I simulated a few common attacks and watched how Wazuh (ope
 
 ## Setup
 
-- Attacker: Kali Linux VM (192.168.56.101)
-- Target: Fedora 43 host (192.168.56.1), running OpenSSH and Apache, with firewalld rules limiting inbound 22/80 to the lab subnet only
+- Attacker: Kali Linux VM 
+- Target: Fedora 43 host, running OpenSSH and Apache, with firewalld rules limiting inbound 22/80 to the lab subnet only
 - SIEM: Wazuh 4.14.8, deployed single-node via Docker Compose, with an agent installed on the Fedora target
 
 ## What I did
@@ -13,20 +13,20 @@ Small home lab where I simulated a few common attacks and watched how Wazuh (ope
 ### Nmap scan
 Ran a SYN stealth scan from Kali against the target:
 
-    nmap -sS 192.168.56.1
+    nmap -sS <target ip>
 
 This one didn't actually trigger a host-based alert - SYN scans don't touch application services or generate logs on their end, so catching this needs network-level monitoring instead (firewall drop logs, or something like Suricata).
 
 ### SSH brute force
 Threw rockyou.txt at SSH with Hydra:
 
-    hydra -l victim -P /usr/share/wordlists/rockyou.txt -t 1 -W 5 ssh://192.168.56.1
+    hydra -l victim -P /usr/share/wordlists/rockyou.txt -t 1 -W 5 ssh://<target ip>
 
 Wazuh caught this one well. Rule 5710/5760 fired on each failed login, and once it saw enough failures from the same source in a short window, Rule 5763 escalated it to a brute-force alert (level 10). SSH's own connection throttling also kicked in and slowed the attack down on its own.
 
 ### Nikto web scan
 
-    nikto -h http://192.168.56.1
+    nikto -h http://<target ip>
 
 Found a handful of real issues: missing security headers (CSP, HSTS), HTTP TRACE still enabled, and directory listing exposed on /icons/. Wazuh picked up the scan itself as a wave of 400 errors from one IP (rule 31101), then escalated to a scanning alert (rule 31151) once the volume crossed its threshold.
 
